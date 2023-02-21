@@ -216,6 +216,5 @@ Build all projects. The build automatically determines and builds the dependenci
 
 Adventials isn't completed yet. The following list of features will be shipped with the next releases.
 
-- Autocomplete support for the search input field.
 - Sending a confirmation email after checkout completion.
 - Use OIDC to provide personal data during the checkout process.
