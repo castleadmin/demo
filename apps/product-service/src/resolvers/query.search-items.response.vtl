@@ -1,0 +1,4 @@
+#if($context.result && $context.result.error)
+	$util.error($context.result.error)
+#end
+$util.toJson($context.result.items)

@@ -1,0 +1,99 @@
+{
+  "name": "product-service-db-init",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/product-service-db-init/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/webpack:webpack",
+      "defaultConfiguration": "development",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/product-service-db-init",
+        "main": "apps/product-service-db-init/src/main.ts",
+        "tsConfig": "apps/product-service-db-init/tsconfig.app.json",
+        "assets": ["apps/product-service-db-init/src/assets"]
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/product-service-db-init/src/environments/environment.ts",
+              "with": "apps/product-service-db-init/src/environments/environment.test.ts"
+            }
+          ]
+        },
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/product-service-db-init/src/environments/environment.ts",
+              "with": "apps/product-service-db-init/src/environments/environment.production.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "product-service-db-init:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "product-service-db-init:build:development"
+        },
+        "test": {
+          "buildTarget": "product-service-db-init:build:test"
+        },
+        "production": {
+          "buildTarget": "product-service-db-init:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/product-service-db-init/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/product-service-db-init/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "init-database": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "echo \"please add the -c option\""
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "command": "cd dist/apps/product-service-db-init && node main.js"
+        },
+        "production": {
+          "command": "cd dist/apps/product-service-db-init && node main.js"
+        }
+      },
+      "dependsOn": [
+        { "projects": "self", "target": "build", "params": "forward" }
+      ]
+    }
+  },
+  "tags": ["app:adventials", "type:backend", "layer:app"]
+}

@@ -1,0 +1,29 @@
+.card {
+  margin: 16px 0 0 16px;
+  min-width: 176px;
+
+  .link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+
+    .card-button {
+      width: 100%;
+      padding: 0;
+      text-transform: inherit;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
+    .image {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .category {
+      margin-top: 4px;
+    }
+  }
+}

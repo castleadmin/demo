@@ -1,0 +1,96 @@
+org: castleadmin
+app: adventials
+service: product-service
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: nodejs18.x
+  architecture: x86_64
+  memorySize: 160
+  timeout: 20
+  logRetentionInDays: 30
+  stage: ${opt:stage, 'development'}
+  tags:
+    app: adventials
+    env: ${self:provider.stage}
+    project: 'product-service'
+  stackTags:
+    app: adventials
+    env: ${self:provider.stage}
+    project: 'product-service'
+  environment:
+    ENVIRONMENT: ${self:provider.stage}
+    RELEASE: ${env:SENTRY_RELEASE, 'development'}
+    SENTRY_DSN: ${param:SENTRY_DSN, ''}
+    SENTRY_TRACES_SAMPLE_RATE: ${param:SENTRY_TRACES_SAMPLE_RATE, '0'}
+    MONGODB_URI: ${param:MONGODB_URI, ''}
+    DB_NAME: ${param:DB_NAME, ''}
+    PRODUCTS_COLLECTION_NAME: ${param:PRODUCTS_COLLECTION_NAME, ''}
+    SEARCH_INDEX_NAME: ${param:SEARCH_INDEX_NAME, ''}
+
+package:
+  individually: true
+
+params:
+  development:
+    SENTRY_DSN: ''
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    PRODUCTS_COLLECTION_NAME: 'products-test'
+    SEARCH_INDEX_NAME: 'search-products-test'
+  test:
+    SENTRY_DSN: 'PLACEHOLDER'
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    PRODUCTS_COLLECTION_NAME: 'products-test'
+    SEARCH_INDEX_NAME: 'search-products-test'
+  production:
+    SENTRY_DSN: 'PLACEHOLDER'
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    PRODUCTS_COLLECTION_NAME: 'products-production'
+    SEARCH_INDEX_NAME: 'search-products-production'
+
+custom:
+  webpack:
+    webpackConfig: 'serverless.webpack.config.js'
+    packager: 'npm'
+    keepOutputDirectory: true
+    includeModules:
+      nodeModulesRelativeDir: '../../../'
+      packagePath: '../../../package.json'
+      forceExclude:
+        - aws-sdk
+    packagerOptions:
+      lockFile: '../../../package-lock.json'
+    excludeFiles: '**/*.js.map'
+    excludeRegex: '^.*\.js\.map$'
+
+functions:
+  countItems:
+    handler: count-items.handler
+    reservedConcurrency: 64
+  countSearchItems:
+    handler: count-search-items.handler
+    reservedConcurrency: 64
+  getItem:
+    handler: get-item.handler
+    reservedConcurrency: 64
+  getItems:
+    handler: get-items.handler
+    reservedConcurrency: 64
+  searchItems:
+    handler: search-items.handler
+    reservedConcurrency: 64
+  getItemsById:
+    handler: get-items-by-id.handler
+    reservedConcurrency: 32

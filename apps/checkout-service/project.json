@@ -1,0 +1,260 @@
+{
+  "name": "checkout-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/checkout-service/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/webpack:webpack",
+      "defaultConfiguration": "development",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/checkout-service",
+        "main": "apps/checkout-service/src/main.ts",
+        "additionalEntryPoints": [
+          {
+            "entryName": "create-order",
+            "entryPath": "apps/checkout-service/src/handlers/create-order.ts"
+          },
+          {
+            "entryName": "get-shipping-details",
+            "entryPath": "apps/checkout-service/src/handlers/get-shipping-details.ts"
+          },
+          {
+            "entryName": "request-checkout-approval",
+            "entryPath": "apps/checkout-service/src/handlers/request-checkout-approval.ts"
+          },
+          {
+            "entryName": "send-checkout-error",
+            "entryPath": "apps/checkout-service/src/handlers/send-checkout-error.ts"
+          },
+          {
+            "entryName": "send-confirmation-email",
+            "entryPath": "apps/checkout-service/src/handlers/send-confirmation-email.ts"
+          },
+          {
+            "entryName": "validate-order",
+            "entryPath": "apps/checkout-service/src/handlers/validate-order.ts"
+          }
+        ],
+        "sourceMap": true,
+        "tsConfig": "apps/checkout-service/tsconfig.app.json",
+        "assets": [
+          "apps/checkout-service/src/assets",
+          "apps/checkout-service/src/serverless.webpack.config.js",
+          "apps/checkout-service/src/serverless.yml"
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        },
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "checkout-service:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "checkout-service:build:development"
+        },
+        "test": {
+          "buildTarget": "checkout-service:build:test"
+        },
+        "production": {
+          "buildTarget": "checkout-service:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/checkout-service/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/checkout-service/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "echo \"please add the -c option\""
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "command": "cd dist/apps/checkout-service && sls package --stage=test"
+        },
+        "production": {
+          "command": "cd dist/apps/checkout-service && sls package --stage=production"
+        }
+      },
+      "dependsOn": [
+        { "projects": "self", "target": "build", "params": "forward" }
+      ]
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "echo \"please add the -c option\""
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "command": "cd dist/apps/checkout-service && sls deploy --stage=test"
+        },
+        "production": {
+          "command": "cd dist/apps/checkout-service && sls deploy --stage=production"
+        }
+      },
+      "dependsOn": [
+        { "projects": "self", "target": "build", "params": "forward" }
+      ]
+    },
+    "terraform-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["terraform fmt -recursive"],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      }
+    },
+    "terraform-init": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-test' terraform init -input=false"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-production' terraform init -input=false"
+          ]
+        }
+      }
+    },
+    "terraform-plan": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-test' terraform plan -out=tfplan -input=false -var=\"api_id=$ADVENTIALS_APPSYNC_API_ID\""
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-production' terraform plan -out=tfplan -input=false -var=\"api_id=$ADVENTIALS_APPSYNC_API_ID\""
+          ]
+        }
+      }
+    },
+    "terraform-apply": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-test' terraform apply -input=false tfplan"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='checkout-service-production' terraform apply -input=false tfplan"
+          ]
+        }
+      }
+    },
+    "terraform-to-env": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/checkout-service",
+        "parallel": true
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "echo AWS_ACCOUNT_ID=\"$(TF_WORKSPACE='checkout-service-test' terraform output -raw AWS_ACCOUNT_ID)\" >> .env.local"
+          ]
+        },
+        "production": {
+          "commands": [
+            "echo AWS_ACCOUNT_ID=\"$(TF_WORKSPACE='checkout-service-production' terraform output -raw AWS_ACCOUNT_ID)\" >> .env.local"
+          ]
+        }
+      },
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "remove-project-env-local",
+          "params": "forward"
+        }
+      ]
+    },
+    "remove-project-env-local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["rm -f .env.local"],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      }
+    },
+    "extract-graphql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "rm -rf ../adventials-infrastructure/graphql-schemas/checkout-service",
+          "mkdir --parents ../adventials-infrastructure/graphql-schemas/checkout-service",
+          "cp schema.graphql ../adventials-infrastructure/graphql-schemas/checkout-service/schema.graphql"
+        ],
+        "cwd": "apps/checkout-service",
+        "parallel": false
+      }
+    }
+  },
+  "tags": ["app:adventials", "type:backend", "layer:app"]
+}

@@ -1,0 +1,124 @@
+org: castleadmin
+app: adventials
+service: checkout-service
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+
+provider:
+  name: aws
+  region: eu-central-1
+  runtime: nodejs18.x
+  architecture: x86_64
+  memorySize: 192
+  timeout: 20
+  logRetentionInDays: 30
+  stage: ${opt:stage, 'development'}
+  tags:
+    app: adventials
+    env: ${self:provider.stage}
+    project: 'checkout-service'
+  stackTags:
+    app: adventials
+    env: ${self:provider.stage}
+    project: 'checkout-service'
+  environment:
+    ENVIRONMENT: ${self:provider.stage}
+    RELEASE: ${env:SENTRY_RELEASE, 'development'}
+    SENTRY_DSN: ${param:SENTRY_DSN, ''}
+    SENTRY_TRACES_SAMPLE_RATE: ${param:SENTRY_TRACES_SAMPLE_RATE, '0'}
+    GRAPHQL_ENDPOINT: ${param:GRAPHQL_ENDPOINT, ''}
+    MONGODB_URI: ${param:MONGODB_URI, ''}
+    DB_NAME: ${param:DB_NAME, ''}
+    ORDERS_COLLECTION_NAME: ${param:ORDERS_COLLECTION_NAME, ''}
+    NO_REPLY_EMAIL_ADDRESS: ${param:NO_REPLY_EMAIL_ADDRESS, ''}
+    FEEDBACK_EMAIL_ADDRESS: ${param:FEEDBACK_EMAIL_ADDRESS, ''}
+    FEEDBACK_EMAIL_ARN: 'arn:aws:ses:eu-central-1:${env:AWS_ACCOUNT_ID}:identity/${param:FEEDBACK_EMAIL_ADDRESS, ""}'
+    EMAIL_TEMPLATE_NAME: ${param:EMAIL_TEMPLATE_NAME, ''}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - 'appsync:GraphQL'
+          Resource:
+            - 'arn:aws:appsync:eu-central-1:${env:AWS_ACCOUNT_ID}:apis/${env:ADVENTIALS_APPSYNC_API_ID}/types/Mutation/fields/requestCheckoutApproval'
+            - 'arn:aws:appsync:eu-central-1:${env:AWS_ACCOUNT_ID}:apis/${env:ADVENTIALS_APPSYNC_API_ID}/types/Mutation/fields/sendCheckoutError'
+        - Effect: Allow
+          Action:
+            - 'ses:SendTemplatedEmail'
+          Resource:
+            - 'arn:aws:ses:eu-central-1:${env:AWS_ACCOUNT_ID}:identity/${param:EMAIL_DOMAIN, ""}'
+            - 'arn:aws:ses:eu-central-1:${env:AWS_ACCOUNT_ID}:identity/${param:FEEDBACK_EMAIL_ADDRESS, ""}'
+            - 'arn:aws:ses:eu-central-1:${env:AWS_ACCOUNT_ID}:template/${param:EMAIL_TEMPLATE_NAME, ""}-de'
+            - 'arn:aws:ses:eu-central-1:${env:AWS_ACCOUNT_ID}:template/${param:EMAIL_TEMPLATE_NAME, ""}-en-us'
+
+package:
+  individually: true
+
+params:
+  development:
+    SENTRY_DSN: ''
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    GRAPHQL_ENDPOINT: 'PLACEHOLDER'
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    ORDERS_COLLECTION_NAME: 'orders-test'
+    NO_REPLY_EMAIL_ADDRESS: 'no-reply@test.adventials.com'
+    FEEDBACK_EMAIL_ADDRESS: 'willig.tobias+test@gmail.com'
+    EMAIL_TEMPLATE_NAME: 'order-confirmation-checkout-service-test'
+    EMAIL_DOMAIN: 'test.adventials.com'
+  test:
+    SENTRY_DSN: 'PLACEHOLDER'
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    GRAPHQL_ENDPOINT: 'PLACEHOLDER'
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    ORDERS_COLLECTION_NAME: 'orders-test'
+    NO_REPLY_EMAIL_ADDRESS: 'no-reply@test.adventials.com'
+    FEEDBACK_EMAIL_ADDRESS: 'willig.tobias+test@gmail.com'
+    EMAIL_TEMPLATE_NAME: 'order-confirmation-checkout-service-test'
+    EMAIL_DOMAIN: 'test.adventials.com'
+  production:
+    SENTRY_DSN: 'PLACEHOLDER'
+    SENTRY_TRACES_SAMPLE_RATE: 0
+    GRAPHQL_ENDPOINT: 'PLACEHOLDER'
+    MONGODB_URI: 'mongodb+srv://adventials.kdefifi.mongodb.net'
+    DB_NAME: 'adventials'
+    ORDERS_COLLECTION_NAME: 'orders-production'
+    NO_REPLY_EMAIL_ADDRESS: 'no-reply@adventials.com'
+    FEEDBACK_EMAIL_ADDRESS: 'willig.tobias@gmail.com'
+    EMAIL_TEMPLATE_NAME: 'order-confirmation-checkout-service-production'
+    EMAIL_DOMAIN: 'adventials.com'
+
+custom:
+  webpack:
+    webpackConfig: 'serverless.webpack.config.js'
+    packager: 'npm'
+    keepOutputDirectory: true
+    includeModules:
+      nodeModulesRelativeDir: '../../../'
+      packagePath: '../../../package.json'
+      forceExclude:
+        - aws-sdk
+    packagerOptions:
+      lockFile: '../../../package-lock.json'
+    excludeFiles: '**/*.js.map'
+    excludeRegex: '^.*\.js\.map$'
+
+functions:
+  validateOrder:
+    handler: validate-order.handler
+  getShippingDetails:
+    handler: get-shipping-details.handler
+  requestCheckoutApproval:
+    handler: request-checkout-approval.handler
+  sendCheckoutError:
+    handler: send-checkout-error.handler
+  createOrder:
+    handler: create-order.handler
+    reservedConcurrency: 32
+  sendConfirmationEmail:
+    handler: send-confirmation-email.handler

@@ -1,0 +1,14 @@
+{
+  "version": "2018-05-29",
+  "method": "POST",
+  "params": {
+    "headers": {
+      "Content-Type": "application/x-amz-json-1.0",
+      "x-amz-target": "AWSStepFunctions.SendTaskHeartbeat"
+    },
+    "body": $util.toJson({
+      "taskToken": "$context.arguments.token"
+    })
+  },
+  "resourcePath": "/"
+}

@@ -1,0 +1,109 @@
+.checkout-form {
+  display: flex;
+  margin: -16px -16px 0 0;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  .checkout-part {
+    &.options-checkout-part {
+      width: 100%;
+    }
+
+    .checkout-card {
+      margin: 16px 16px 0 0;
+
+      &.options-checkout-card {
+        width: auto;
+      }
+
+      .personal-form-card-content {
+        .personal-form-container {
+          margin-top: 16px - 4px;
+
+          .text-field-container {
+            margin: 0 -16px 0 0;
+
+            .text-field {
+              margin: 4px 16px 0 0;
+              width: 256px;
+            }
+          }
+
+          .country-container {
+            .country {
+              margin-top: 4px;
+              width: 256px;
+            }
+          }
+        }
+      }
+
+      .options-form-container {
+        .options-form-line {
+          margin-top: 24px;
+
+          .payment-method {
+            width: 256px;
+          }
+
+          .shipping-option {
+            width: 256px;
+          }
+        }
+      }
+    }
+
+    .submit-checkout-container {
+      margin: 16px 16px 0 0;
+
+      .checkout-card {
+        margin: 0 auto;
+        width: 256px + 2 * 16px;
+
+        .submit-card-content {
+          padding-bottom: 16px;
+
+          .privacy-policy-container {
+          }
+
+          .submit-button-container {
+            margin-top: 16px;
+
+            .submit-button {
+              width: 256px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 592px) {
+  .checkout-form {
+    .checkout-part {
+      &.options-checkout-part {
+        width: auto;
+      }
+
+      .checkout-card {
+        &.options-checkout-card {
+          width: 560px;
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 896px) {
+  .checkout-form {
+    .checkout-part {
+      .checkout-card {
+        &.options-checkout-card {
+          width: auto;
+        }
+      }
+    }
+  }
+}

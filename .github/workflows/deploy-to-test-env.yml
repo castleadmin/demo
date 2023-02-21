@@ -1,0 +1,104 @@
+name: Deploy to Test Environment
+
+on:
+  push:
+    branches: ['main']
+
+concurrency:
+  group: 'Test Environment'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure Branch variable
+        run: echo "BRANCH=$(echo "$GITHUB_REF" | sed 's/^refs\/heads\///')" >> $GITHUB_ENV
+      - name: Configure nx affected Check
+        run: |
+          echo "NX_HEAD=$GITHUB_REF" >> $GITHUB_ENV
+          echo "NX_BASE=$GITHUB_REF~1" >> $GITHUB_ENV
+      - name: Configure Sentry
+        run: |
+          RELEASE="$(echo "$GITHUB_REF" | sed 's/^.*\///')"
+          echo "SENTRY_RELEASE=$RELEASE" >> $GITHUB_ENV
+          cat << EOF > ~/.sentryclirc
+          [auth]
+          token=$SENTRY_AUTH_TOKEN
+          EOF
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::563992912404:role/GithubRole
+          role-session-name: aws-session
+          aws-region: eu-central-1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Lint affected Projects
+        run: npx nx affected --target=lint --configuration=test
+      - name: Test affected Projects
+        run: npx nx affected --target=test --codeCoverage --configuration=test
+
+      - name: Extract GraphQL
+        run: npx nx run-many --all --target=extract-graphql --configuration=test
+      - name: Merge GraphQL
+        run: npx nx run-many --all --target=merge-graphql --configuration=test
+
+      - name: Init Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-init-infrastructure --configuration=test
+      - name: Plan Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-plan-infrastructure --configuration=test
+      - name: Apply Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-apply-infrastructure --configuration=test
+      - name: Convert Terraform Infrastructure Project Outputs to Environment Variables
+        run: rm -f .env.local && npx nx run-many --all --target=terraform-to-env-infrastructure --configuration=test
+
+      - name: Init affected Terraform Projects
+        run: npx nx run-many --all --target=terraform-init --configuration=test
+      - name: Plan affected Terraform Projects
+        run: npx nx affected --target=terraform-plan --configuration=test
+      - name: Apply affected Terraform Projects
+        run: npx nx affected --target=terraform-apply --configuration=test
+      - name: Convert Terraform Project Outputs to Environment Variables
+        run: npx nx run-many --all --target=terraform-to-env --configuration=test
+
+      - name: Initialize Databases
+        run: npx nx affected --target=init-database --configuration=test
+        env:
+          MONGODB_USER: ${{ secrets.MONGODB_USER }}
+          MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+          SEARCH_INDEX_API_KEY: ${{ secrets.SEARCH_INDEX_API_KEY }}
+
+      - name: Deploy affected Projects
+        run: npx nx affected --target=deploy --configuration=test
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+      - name: Deploy affected Vercel Projects
+        run: npx nx affected --target=deploy-vercel --parallel=1 --configuration=test
+        env:
+          NEXT_PUBLIC_RELEASE: ${{ env.SENTRY_RELEASE }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

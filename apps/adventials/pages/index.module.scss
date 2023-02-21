@@ -1,0 +1,37 @@
+.home-page {
+  margin: 0 auto;
+  max-width: 1200px - 2 * 16px;
+
+  .title {
+    margin: 0 -16px;
+    padding-top: 24px;
+    font-family: 'Kalam', cursive;
+    font-size: 4rem;
+    letter-spacing: 0.01562em;
+  }
+
+  .subtitle {
+    font-size: 1.33rem;
+  }
+
+  .categories {
+    margin-top: 26px;
+  }
+}
+
+@media (min-width: 600px) {
+  .home-page {
+    .title {
+      padding-top: 32px;
+      font-size: 6rem;
+    }
+
+    .subtitle {
+      font-size: 2rem;
+    }
+
+    .categories {
+      margin-top: 36px;
+    }
+  }
+}

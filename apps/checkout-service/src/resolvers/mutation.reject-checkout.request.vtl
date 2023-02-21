@@ -1,0 +1,16 @@
+{
+  "version": "2018-05-29",
+  "method": "POST",
+  "params": {
+    "headers": {
+      "Content-Type": "application/x-amz-json-1.0",
+      "x-amz-target": "AWSStepFunctions.SendTaskFailure"
+    },
+    "body": $util.toJson({
+      "error": "userRejectsError",
+      "cause": "The user has rejected the proposed order",
+      "taskToken": "$context.arguments.token"
+    })
+  },
+  "resourcePath": "/"
+}

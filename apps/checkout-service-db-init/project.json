@@ -1,0 +1,99 @@
+{
+  "name": "checkout-service-db-init",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/checkout-service-db-init/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/webpack:webpack",
+      "defaultConfiguration": "development",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/checkout-service-db-init",
+        "main": "apps/checkout-service-db-init/src/main.ts",
+        "tsConfig": "apps/checkout-service-db-init/tsconfig.app.json",
+        "assets": ["apps/checkout-service-db-init/src/assets"]
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/checkout-service-db-init/src/environments/environment.ts",
+              "with": "apps/checkout-service-db-init/src/environments/environment.test.ts"
+            }
+          ]
+        },
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/checkout-service-db-init/src/environments/environment.ts",
+              "with": "apps/checkout-service-db-init/src/environments/environment.production.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "checkout-service-db-init:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "checkout-service-db-init:build:development"
+        },
+        "test": {
+          "buildTarget": "checkout-service-db-init:build:test"
+        },
+        "production": {
+          "buildTarget": "checkout-service-db-init:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/checkout-service-db-init/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/checkout-service-db-init/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "init-database": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "echo \"please add the -c option\""
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "command": "cd dist/apps/checkout-service-db-init && node main.js"
+        },
+        "production": {
+          "command": "cd dist/apps/checkout-service-db-init && node main.js"
+        }
+      },
+      "dependsOn": [
+        { "projects": "self", "target": "build", "params": "forward" }
+      ]
+    }
+  },
+  "tags": ["app:adventials", "type:backend", "layer:app"]
+}

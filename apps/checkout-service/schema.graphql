@@ -1,0 +1,244 @@
+schema {
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Mutation {
+  checkout(transactionId: ID!, createOrder: CreateOrderInput!): ID!
+  requestCheckoutApproval(
+    transactionId: ID!
+    token: ID!
+    approvalOrder: ApprovalOrderInput!
+  ): RequestCheckoutApproval! @aws_iam
+  approveCheckout(transactionId: ID!, token: ID!): ID!
+  rejectCheckout(transactionId: ID!, token: ID!): ID!
+  checkoutHeartbeat(transactionId: ID!, token: ID!): ID!
+  sendCheckoutError(
+    transactionId: ID!
+    errorType: CheckoutErrorType!
+  ): SendCheckoutError! @aws_iam
+}
+
+type Subscription {
+  onRequestCheckoutApproval(transactionId: ID!): RequestCheckoutApproval
+    @aws_subscribe(mutations: ["requestCheckoutApproval"])
+  onSendCheckoutError(transactionId: ID!): SendCheckoutError
+    @aws_subscribe(mutations: ["sendCheckoutError"])
+}
+
+type SendCheckoutError @aws_api_key @aws_iam {
+  transactionId: ID!
+  errorType: CheckoutErrorType!
+}
+
+enum CheckoutErrorType @aws_api_key @aws_iam {
+  internalError
+  validationError
+  allItemsAreInvalidError
+  userRejectsError
+  timeoutError
+}
+
+type RequestCheckoutApproval @aws_api_key @aws_iam {
+  transactionId: ID!
+  token: ID!
+  approvalOrder: ApprovalOrder!
+}
+
+input ApprovalOrderInput @aws_iam {
+  firstName: String!
+  lastName: String!
+  businessName: String
+  emailAddress: String!
+  streetAddress: String!
+  zipCode: String!
+  city: String!
+  country: Country!
+  shippingOption: ShippingOption!
+  paymentMethod: PaymentMethod!
+  language: String!
+  items: [CreateOrderItemInput!]!
+  validationResult: ValidationResultInput!
+  checkItemsResult: CheckItemsResultInput!
+  shippingResult: ShippingResultInput!
+}
+
+type ApprovalOrder implements CreateOrderInterface & WithValidation & WithCheckItems & WithShipping
+  @aws_api_key
+  @aws_iam {
+  firstName: String!
+  lastName: String!
+  businessName: String
+  emailAddress: String!
+  streetAddress: String!
+  zipCode: String!
+  city: String!
+  country: Country!
+  shippingOption: ShippingOption!
+  paymentMethod: PaymentMethod!
+  language: String!
+  items: [CreateOrderItem!]!
+  validationResult: ValidationResult!
+  checkItemsResult: CheckItemsResult!
+  shippingResult: ShippingResult!
+}
+
+input CreateOrderInput {
+  firstName: String!
+  lastName: String!
+  businessName: String
+  emailAddress: String!
+  streetAddress: String!
+  zipCode: String!
+  city: String!
+  country: Country!
+  shippingOption: ShippingOption!
+  paymentMethod: PaymentMethod!
+  language: String!
+  items: [CreateOrderItemInput!]!
+}
+
+type CreateOrder implements CreateOrderInterface {
+  firstName: String!
+  lastName: String!
+  businessName: String
+  emailAddress: String!
+  streetAddress: String!
+  zipCode: String!
+  city: String!
+  country: Country!
+  shippingOption: ShippingOption!
+  paymentMethod: PaymentMethod!
+  language: String!
+  items: [CreateOrderItem!]!
+}
+
+interface WithValidation @aws_api_key @aws_iam {
+  validationResult: ValidationResult!
+}
+
+input ValidationResultInput @aws_iam {
+  isValid: Boolean!
+}
+
+type ValidationResult @aws_api_key @aws_iam {
+  isValid: Boolean!
+}
+
+interface WithCheckItems @aws_api_key @aws_iam {
+  checkItemsResult: CheckItemsResult!
+}
+
+input CheckItemsResultInput @aws_iam {
+  hasValidItems: Boolean!
+  invalidItemIds: [String!]!
+  checkedItems: [ItemInput!]!
+}
+
+type CheckItemsResult @aws_api_key @aws_iam {
+  hasValidItems: Boolean!
+  invalidItemIds: [String!]!
+  checkedItems: [Item!]!
+}
+
+interface WithShipping @aws_api_key @aws_iam {
+  shippingResult: ShippingResult!
+}
+
+input ShippingResultInput @aws_iam {
+  shippingPrices: ShippingPricesInput!
+  deliveryDateItems: [DeliveryDateItemInput!]!
+}
+
+type ShippingResult @aws_api_key @aws_iam {
+  shippingPrices: ShippingPrices!
+  deliveryDateItems: [DeliveryDateItem!]!
+}
+
+input ShippingPricesInput @aws_iam {
+  EUR: Int!
+}
+
+type ShippingPrices @aws_api_key @aws_iam {
+  EUR: Int!
+}
+
+input DeliveryDateItemInput @aws_iam {
+  itemId: ID!
+  deliveryDate: String!
+}
+
+type DeliveryDateItem @aws_api_key @aws_iam {
+  itemId: ID!
+  deliveryDate: String!
+}
+
+interface CreateOrderInterface @aws_api_key @aws_iam {
+  firstName: String!
+  lastName: String!
+  businessName: String
+  emailAddress: String!
+  streetAddress: String!
+  zipCode: String!
+  city: String!
+  country: Country!
+  shippingOption: ShippingOption!
+  paymentMethod: PaymentMethod!
+  language: String!
+  items: [CreateOrderItem!]!
+}
+
+enum Country @aws_api_key @aws_iam {
+  Austria
+  Belgium
+  Bulgaria
+  Canada
+  Croatia
+  Cyprus
+  CzechRepublic
+  Denmark
+  Estonia
+  Finland
+  France
+  Germany
+  Greece
+  Hungary
+  Ireland
+  Italy
+  Japan
+  Latvia
+  Lithuania
+  Luxembourg
+  Malta
+  Netherlands
+  Poland
+  Portugal
+  Romania
+  Slovakia
+  Slovenia
+  Spain
+  Sweden
+  UnitedKingdom
+  UnitedStates
+}
+
+enum ShippingOption @aws_api_key @aws_iam {
+  standard
+  express
+}
+
+enum PaymentMethod @aws_api_key @aws_iam {
+  playMoney
+  sweets
+  greetingCards
+}
+
+input CreateOrderItemInput @aws_iam {
+  itemId: ID!
+  quantity: Int!
+}
+
+type CreateOrderItem @aws_api_key @aws_iam {
+  itemId: ID!
+  quantity: Int!
+}

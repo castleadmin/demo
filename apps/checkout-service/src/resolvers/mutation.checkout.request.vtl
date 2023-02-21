@@ -1,0 +1,19 @@
+#set( $namePrefix = "checkout_" )
+#set( $name = "$namePrefix$context.arguments.transactionId" )
+
+{
+  "version": "2018-05-29",
+  "method": "POST",
+  "params": {
+    "headers": {
+      "Content-Type": "application/x-amz-json-1.0",
+      "x-amz-target": "AWSStepFunctions.StartExecution"
+    },
+    "body": $util.toJson({
+      "input": $util.toJson($context.arguments),
+      "name": "$name",
+      "stateMachineArn": "${SFN_ARN}"
+    })
+  },
+  "resourcePath": "/"
+}

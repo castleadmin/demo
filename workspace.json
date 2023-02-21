@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "projects": {
+    "adventials": "apps/adventials",
+    "adventials-e2e": "apps/adventials-e2e",
+    "adventials-infrastructure": "apps/adventials-infrastructure",
+    "checkout-domain": "libs/checkout-domain",
+    "checkout-service": "apps/checkout-service",
+    "checkout-service-db-init": "apps/checkout-service-db-init",
+    "frontend-utils": "libs/frontend-utils",
+    "product-domain": "libs/product-domain",
+    "product-service": "apps/product-service",
+    "product-service-db-init": "apps/product-service-db-init",
+    "serverless-utils": "libs/serverless-utils"
+  },
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
+}

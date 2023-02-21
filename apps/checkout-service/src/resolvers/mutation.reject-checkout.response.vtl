@@ -1,0 +1,5 @@
+#if($context.result.statusCode == 200)
+  $util.toJson($context.arguments.transactionId)
+#else
+  $util.error($context.result.body, $util.toJson($context.result.statusCode))
+#end

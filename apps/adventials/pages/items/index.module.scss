@@ -1,0 +1,51 @@
+.items-page {
+  margin: 0 auto;
+  padding-top: 24px;
+  max-width: 1200px - 2 * 16px;
+
+  .items-header {
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      margin: -24px 0 0 -16px;
+
+      .option {
+        margin: 24px 0 0 16px;
+      }
+    }
+
+    .items-title {
+      .title {
+        margin-top: 20px;
+      }
+
+      .items-count {
+        margin-top: 8px;
+      }
+    }
+  }
+
+  .search-results {
+    display: flex;
+    margin: (24px - 16px) 0 0 -16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+
+    .search-result {
+      margin: 16px 0 0 16px;
+      min-width: ((1200px - 2 * 16px) + 16px) / 4 - 16px;
+      max-width: ((1200px - 2 * 16px) + 16px) / 4 - 16px;
+      flex: 1 1 auto;
+    }
+  }
+
+  .pagination {
+    display: flex;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    justify-content: center;
+  }
+}

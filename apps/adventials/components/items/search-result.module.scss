@@ -1,0 +1,70 @@
+.search-result {
+  width: 100%;
+  height: 100%;
+
+  .result-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+
+    .result-button {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      text-align: inherit;
+      text-transform: inherit;
+
+      .card-content {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+
+        .image-container {
+          position: relative;
+          margin: 8px auto 0 auto;
+          width: 128px;
+          background-color: black;
+          border-radius: 4px;
+
+          .item-image {
+            display: block;
+            position: relative;
+            z-index: 1;
+            border-radius: inherit;
+          }
+
+          .effect-image {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: inherit;
+          }
+        }
+
+        .item-properties {
+          margin-top: 16px;
+
+          .price-container {
+            .price {
+              margin-left: 12px;
+            }
+          }
+
+          .rating {
+            display: flex;
+            margin-top: 4px;
+            justify-content: flex-start;
+            align-items: stretch;
+
+            .rating-count {
+              margin-left: 4px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

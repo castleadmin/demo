@@ -1,0 +1,33 @@
+.header-search {
+  flex: 1 1 auto;
+}
+
+.header-cart {
+  display: none;
+}
+
+.header-language {
+  display: none;
+}
+
+.header-options {
+  display: inline-flex;
+}
+
+@media (min-width: 600px) {
+  .header-search {
+    margin-left: 16px + 12px + 24px;
+  }
+
+  .header-cart {
+    display: inline-flex;
+  }
+
+  .header-language {
+    display: inline-flex;
+  }
+
+  .header-options {
+    display: none;
+  }
+}

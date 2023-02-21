@@ -1,0 +1,74 @@
+{
+  "root": true,
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nrwl/nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "app:adventials",
+                "onlyDependOnLibsWithTags": ["app:adventials"]
+              },
+              {
+                "sourceTag": "type:frontend",
+                "onlyDependOnLibsWithTags": ["type:frontend"]
+              },
+              {
+                "sourceTag": "type:backend",
+                "onlyDependOnLibsWithTags": ["type:backend"]
+              },
+              {
+                "sourceTag": "layer:app",
+                "onlyDependOnLibsWithTags": [
+                  "layer:domain",
+                  "layer:infrastructure",
+                  "layer:utils"
+                ]
+              },
+              {
+                "sourceTag": "layer:domain",
+                "onlyDependOnLibsWithTags": [
+                  "layer:domain",
+                  "layer:infrastructure",
+                  "layer:utils"
+                ]
+              },
+              {
+                "sourceTag": "layer:infrastructure",
+                "onlyDependOnLibsWithTags": ["layer:utils"]
+              },
+              {
+                "sourceTag": "layer:utils",
+                "onlyDependOnLibsWithTags": ["layer:utils"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["plugin:@nrwl/nx/typescript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nrwl/nx/javascript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
+      "env": {
+        "jest": true
+      },
+      "rules": {}
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+name: Deploy to Production Environment
+
+on:
+  release:
+    types: [released]
+
+concurrency:
+  group: 'Production Environment'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get preceding release
+        run: |
+          PRECEDING_RELEASE_TAG="$( \
+            curl \
+              --silent \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              https://api.github.com/repos/castleadmin/castleadmin/releases?per_page=2 \
+            | jq --raw-output .[1].tag_name \
+          )"
+          echo "PRECEDING_RELEASE_REF=refs/tags/$PRECEDING_RELEASE_TAG" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Branch variable
+        run: echo "BRANCH=$(echo "$GITHUB_REF" | sed 's/^refs\///')" >> $GITHUB_ENV
+      - name: Configure nx affected Check
+        run: |
+          echo "NX_HEAD=$GITHUB_REF" >> $GITHUB_ENV
+          echo "NX_BASE=$PRECEDING_RELEASE_REF" >> $GITHUB_ENV
+      - name: Configure Sentry
+        run: |
+          RELEASE="$(echo "$GITHUB_REF" | sed 's/^.*\///')"
+          echo "SENTRY_RELEASE=$RELEASE" >> $GITHUB_ENV
+          cat << EOF > ~/.sentryclirc
+          [auth]
+          token=$SENTRY_AUTH_TOKEN
+          EOF
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::563992912404:role/GithubRole
+          role-session-name: aws-session
+          aws-region: eu-central-1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm ci
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Lint affected Projects
+        run: npx nx affected --target=lint --configuration=production
+      - name: Test affected Projects
+        run: npx nx affected --target=test --codeCoverage --configuration=production
+
+      - name: Extract GraphQL
+        run: npx nx run-many --all --target=extract-graphql --configuration=production
+      - name: Merge GraphQL
+        run: npx nx run-many --all --target=merge-graphql --configuration=production
+
+      - name: Init Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-init-infrastructure --configuration=production
+      - name: Plan Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-plan-infrastructure --configuration=production
+      - name: Apply Terraform Infrastructure Projects
+        run: npx nx run-many --all --target=terraform-apply-infrastructure --configuration=production
+      - name: Convert Terraform Infrastructure Project Outputs to Environment Variables
+        run: rm -f .env.local && npx nx run-many --all --target=terraform-to-env-infrastructure --configuration=production
+
+      - name: Init affected Terraform Projects
+        run: npx nx run-many --all --target=terraform-init --configuration=production
+      - name: Plan affected Terraform Projects
+        run: npx nx affected --target=terraform-plan --configuration=production
+      - name: Apply affected Terraform Projects
+        run: npx nx affected --target=terraform-apply --configuration=production
+      - name: Convert Terraform Project Outputs to Environment Variables
+        run: npx nx run-many --all --target=terraform-to-env --configuration=production
+
+      - name: Initialize Databases
+        run: npx nx affected --target=init-database --configuration=production
+        env:
+          MONGODB_USER: ${{ secrets.MONGODB_USER }}
+          MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+          SEARCH_INDEX_API_KEY: ${{ secrets.SEARCH_INDEX_API_KEY }}
+
+      - name: Deploy affected Projects
+        run: npx nx affected --target=deploy --configuration=production
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+      - name: Deploy affected Vercel Projects
+        run: npx nx affected --target=deploy-vercel --parallel=1 --configuration=production
+        env:
+          NEXT_PUBLIC_RELEASE: ${{ env.SENTRY_RELEASE }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

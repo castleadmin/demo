@@ -1,0 +1,299 @@
+{
+  "Comment": "Checkout Process",
+  "StartAt": "ValidateOrder",
+  "States": {
+    "SendError": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-sendCheckoutError",
+        "Payload": {
+          "transactionId.$": "$.transactionId",
+          "checkoutError.$": "$.checkoutError"
+        }
+      },
+      "ResultSelector": {
+        "transactionId.$": "$.Payload.transactionId",
+        "checkoutError.$": "$.Payload.checkoutError"
+      },
+      "ResultPath": "$",
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Next": "CheckoutFailed"
+    },
+    "CheckoutFailed": {
+      "Type": "Fail",
+      "Error": "CheckoutFailed",
+      "Cause": "An error occurred during the checkout process execution"
+    },
+    "ValidateOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-validateOrder",
+        "Payload": {
+          "createOrder.$": "$.createOrder"
+        }
+      },
+      "ResultSelector": {
+        "isValid.$": "$.Payload"
+      },
+      "ResultPath": "$.createOrder.validationResult",
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "SendError"
+        }
+      ],
+      "Next": "IsValid"
+    },
+    "IsValid": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.createOrder.validationResult.isValid",
+          "BooleanEquals": true,
+          "Next": "CheckItems"
+        }
+      ],
+      "Default": "CreateValidationError"
+    },
+    "CreateValidationError": {
+      "Type": "Pass",
+      "Parameters": {
+        "transactionId.$": "$.transactionId",
+        "checkoutError": {
+          "Error": "validationError",
+          "Cause": "Invalid order creation input"
+        }
+      },
+      "ResultPath": "$",
+      "Next": "SendError"
+    },
+    "CheckItems": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "product-service-${ENVIRONMENT}-getItemsById",
+        "Payload": {
+          "ids.$": "$.createOrder.items[*].itemId"
+        }
+      },
+      "ResultSelector": {
+        "hasValidItems.$": "$.Payload.hasValidItems",
+        "invalidItemIds.$": "$.Payload.invalidIds",
+        "checkedItems.$": "$.Payload.items"
+      },
+      "ResultPath": "$.createOrder.checkItemsResult",
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "SendError"
+        }
+      ],
+      "Next": "hasValidItems"
+    },
+    "hasValidItems": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.createOrder.checkItemsResult.hasValidItems",
+          "BooleanEquals": true,
+          "Next": "GetShippingDetails"
+        }
+      ],
+      "Default": "CreateAllItemsAreInvalidError"
+    },
+    "CreateAllItemsAreInvalidError": {
+      "Type": "Pass",
+      "Parameters": {
+        "transactionId.$": "$.transactionId",
+        "checkoutError": {
+          "Error": "allItemsAreInvalidError",
+          "Cause": "All item IDs of the order creation input are invalid"
+        }
+      },
+      "ResultPath": "$",
+      "Next": "SendError"
+    },
+    "GetShippingDetails": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-getShippingDetails",
+        "Payload": {
+          "items.$": "$.createOrder.checkItemsResult.checkedItems",
+          "country.$": "$.createOrder.country",
+          "shippingOption.$": "$.createOrder.shippingOption"
+        }
+      },
+      "ResultSelector": {
+        "shippingPrices.$": "$.Payload.shippingPrices",
+        "deliveryDateItems.$": "$.Payload.deliveryDateItems"
+      },
+      "ResultPath": "$.createOrder.shippingResult",
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "SendError"
+        }
+      ],
+      "Next": "RequestCheckoutApproval"
+    },
+    "RequestCheckoutApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-requestCheckoutApproval",
+        "Payload": {
+          "transactionId.$": "$.transactionId",
+          "token.$": "$$.Task.Token",
+          "approvalOrder.$": "$.createOrder"
+        }
+      },
+      "ResultSelector": {
+        "transactionId.$": "$.transactionId"
+      },
+      "ResultPath": null,
+      "OutputPath": "$",
+      "HeartbeatSeconds": 30,
+      "TimeoutSeconds": 1200,
+      "Retry": [
+        {
+          "ErrorEquals": ["userRejectsError"],
+          "MaxAttempts": 0
+        },
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "SendError"
+        }
+      ],
+      "Next": "CreateOrder"
+    },
+    "CreateOrder": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-createOrder",
+        "Payload": {
+          "transactionId.$": "$.transactionId",
+          "approvalOrder.$": "$.createOrder"
+        }
+      },
+      "ResultSelector": {
+        "transactionId.$": "$.Payload.transactionId",
+        "order.$": "$.Payload.order"
+      },
+      "ResultPath": "$",
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "CheckoutFailed"
+        }
+      ],
+      "Next": "SendConfirmationEmail"
+    },
+    "SendConfirmationEmail": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "InputPath": "$",
+      "Parameters": {
+        "FunctionName": "checkout-service-${ENVIRONMENT}-sendConfirmationEmail",
+        "Payload": {
+          "transactionId.$": "$.transactionId",
+          "order.$": "$.order"
+        }
+      },
+      "ResultSelector": {
+        "transactionId.$": "$.Payload.transactionId",
+        "order.$": "$.Payload.order"
+      },
+      "ResultPath": null,
+      "OutputPath": "$",
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.checkoutError",
+          "Next": "CheckoutFailed"
+        }
+      ],
+      "End": true
+    }
+  }
+}

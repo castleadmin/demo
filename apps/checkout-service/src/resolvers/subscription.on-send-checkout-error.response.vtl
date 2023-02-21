@@ -1,0 +1,11 @@
+$extensions.setSubscriptionFilter({
+  "filterGroup": [{
+    "filters": [{
+      "fieldName": "transactionId",
+      "operator": "eq",
+      "value": $context.arguments.transactionId
+    }]
+  }]
+})
+
+null

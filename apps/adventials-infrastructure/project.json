@@ -1,0 +1,139 @@
+{
+  "name": "adventials-infrastructure",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/adventials-infrastructure",
+  "projectType": "application",
+  "targets": {
+    "terraform-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["terraform fmt -recursive"],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      }
+    },
+    "terraform-init-infrastructure": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='adventials-test' terraform init -input=false"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='adventials-production' terraform init -input=false"
+          ]
+        }
+      }
+    },
+    "terraform-plan-infrastructure": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='adventials-test' terraform plan -out=tfplan -input=false"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='adventials-production' terraform plan -out=tfplan -input=false"
+          ]
+        }
+      }
+    },
+    "terraform-plan-infrastructure-with-api-key-rotation": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='adventials-test' terraform plan -out=tfplan -input=false -replace=module.appsync.aws_appsync_api_key.adventials"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='adventials-production' terraform plan -out=tfplan -input=false -replace=module.appsync.aws_appsync_api_key.adventials"
+          ]
+        }
+      }
+    },
+    "terraform-apply-infrastructure": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "TF_WORKSPACE='adventials-test' terraform apply -input=false tfplan"
+          ]
+        },
+        "production": {
+          "commands": [
+            "TF_WORKSPACE='adventials-production' terraform apply -input=false tfplan"
+          ]
+        }
+      }
+    },
+    "terraform-to-env-infrastructure": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "commands": ["echo \"please add the -c option\""],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": true
+      },
+      "configurations": {
+        "development": {},
+        "test": {
+          "commands": [
+            "echo ADVENTIALS_APPSYNC_API_ID=\"$(TF_WORKSPACE='adventials-test' terraform output -raw ADVENTIALS_APPSYNC_API_ID)\" >> ../../.env.local",
+            "echo ADVENTIALS_APPSYNC_API_KEY_ID=\"$(TF_WORKSPACE='adventials-test' terraform output -raw ADVENTIALS_APPSYNC_API_KEY_ID)\" >> ../../.env.local",
+            "echo ADVENTIALS_APPSYNC_API_KEY=\"$(TF_WORKSPACE='adventials-test' terraform output -raw ADVENTIALS_APPSYNC_API_KEY)\" >> ../../.env.local"
+          ]
+        },
+        "production": {
+          "commands": [
+            "echo ADVENTIALS_APPSYNC_API_ID=\"$(TF_WORKSPACE='adventials-production' terraform output -raw ADVENTIALS_APPSYNC_API_ID)\" >> ../../.env.local",
+            "echo ADVENTIALS_APPSYNC_API_KEY_ID=\"$(TF_WORKSPACE='adventials-production' terraform output -raw ADVENTIALS_APPSYNC_API_KEY_ID)\" >> ../../.env.local",
+            "echo ADVENTIALS_APPSYNC_API_KEY=\"$(TF_WORKSPACE='adventials-production' terraform output -raw ADVENTIALS_APPSYNC_API_KEY)\" >> ../../.env.local"
+          ]
+        }
+      }
+    },
+    "merge-graphql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["rm -f schema.api.graphql", "node merge-graphql.js"],
+        "cwd": "apps/adventials-infrastructure",
+        "parallel": false
+      }
+    }
+  },
+  "tags": ["app:adventials", "type:infrastructure"]
+}

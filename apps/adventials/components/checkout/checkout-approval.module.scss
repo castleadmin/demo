@@ -1,0 +1,152 @@
+.checkout-approval {
+  .is-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .error-container {
+  }
+
+  .is-completed-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    .is-completed-icon-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .is-completed-icon {
+        margin-top: -1px;
+        font-size: 2rem;
+      }
+    }
+
+    .is-completed-text-container {
+      margin-left: 16px;
+    }
+  }
+
+  .overview-container {
+    .order-details {
+      display: flex;
+      margin: -16px 0 0 -32px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      flex-wrap: wrap;
+
+      .order-delivery-address-container {
+        margin: 16px 0 0 32px;
+        font-size: 0.875rem;
+
+        .order-delivery-address-title {
+          font-size: 1rem;
+        }
+      }
+
+      .additional-container {
+        .payment-method-container {
+          margin: 16px 0 0 32px;
+          font-size: 0.875rem;
+
+          .payment-method-title {
+            font-size: 1rem;
+          }
+        }
+
+        .email-container {
+          margin: 16px 0 0 32px;
+          font-size: 0.875rem;
+
+          .email-title {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+
+    .delivery-date-order {
+      margin-top: 24px;
+
+      .delivery-date-group {
+        .delivery-date-group-title {
+          font-size: 1.0625rem;
+          font-weight: 400;
+        }
+
+        .delivery-date-group-list {
+          padding-top: 0;
+          padding-bottom: 16px;
+
+          .delivery-date-group-list-item {
+            padding-right: 0;
+
+            &.delivery-date-group-list-item:first-child {
+              padding-top: 4px;
+            }
+
+            .image-container {
+              position: relative;
+              margin: 0 auto 0 auto;
+              width: 64px;
+              background-color: black;
+
+              .item-image {
+                display: block;
+                position: relative;
+                z-index: 1;
+              }
+
+              .effect-image {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+              }
+            }
+
+            .item-title {
+              font-size: 1rem;
+            }
+
+            .is-in-stock {
+              font-size: 0.75rem;
+            }
+
+            .price-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              font-size: 0.875rem;
+            }
+          }
+        }
+      }
+
+      .delivery-date-order-total-price-items,
+      .delivery-date-order-shipping-price,
+      .delivery-date-order-total-price {
+        display: flex;
+        margin-top: 16px;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 0.875rem;
+
+        .delivery-date-order-price-title {
+          font-size: 0.9375rem;
+        }
+      }
+
+      .delivery-date-order-shipping-price {
+        margin-top: 8px;
+        margin-bottom: 16px;
+      }
+
+      .delivery-date-order-total-price {
+        margin-bottom: 8px;
+      }
+    }
+  }
+}

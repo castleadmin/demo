@@ -1,0 +1,146 @@
+schema {
+  query: Query
+}
+
+type Query {
+  getItem(id: ID!): Item!
+  countItems(options: CountItemsOptions): Int!
+  countSearchItems(
+    searchText: String!
+    locale: String!
+    options: CountItemsOptions
+  ): Int!
+  getItems(skip: Int!, limit: Int!, options: GetItemsOptions): [Item!]!
+  searchItems(
+    searchText: String!
+    locale: String!
+    skip: Int!
+    limit: Int!
+    options: GetItemsOptions
+  ): [Item!]!
+}
+
+input CountItemsOptions {
+  category: Category
+  qualities: [Quality!]
+  powers: [EffectPower!]
+}
+
+input GetItemsOptions {
+  category: Category
+  sort: SortOption
+  qualities: [Quality!]
+  powers: [EffectPower!]
+}
+
+input ItemInput @aws_iam {
+  _id: ID!
+  ean: String!
+  category: Category!
+  type: Type
+  quality: Quality!
+  effect: String
+  effectPower: EffectPower!
+  prices: ItemPricesInput!
+  isInStock: Boolean!
+  popularity: Float!
+  halfStars: Int!
+  ratingCount: Int!
+  translations: ItemTranslationsInput!
+}
+
+type Item @aws_api_key @aws_iam {
+  _id: ID!
+  ean: String!
+  category: Category!
+  type: Type
+  quality: Quality!
+  effect: String
+  effectPower: EffectPower!
+  prices: ItemPrices!
+  isInStock: Boolean!
+  popularity: Float!
+  halfStars: Int!
+  ratingCount: Int!
+  translations: ItemTranslations!
+}
+
+input ItemPricesInput @aws_iam {
+  EUR: Int!
+}
+
+type ItemPrices @aws_api_key @aws_iam {
+  EUR: Int!
+}
+
+input ItemTranslationsInput @aws_iam {
+  de: ItemTranslationInput!
+  enUs: ItemTranslationInput!
+}
+
+type ItemTranslations @aws_api_key @aws_iam {
+  de: ItemTranslation!
+  enUs: ItemTranslation!
+}
+
+input ItemTranslationInput @aws_iam {
+  name: String!
+  description: String!
+  effectName: String
+}
+
+type ItemTranslation @aws_api_key @aws_iam {
+  name: String!
+  description: String!
+  effectName: String
+}
+
+enum SortOption {
+  bestResults
+  popularity
+  priceDescending
+  priceAscending
+  review
+}
+
+enum Category @aws_api_key @aws_iam {
+  axes
+  hammers
+  spears
+  daggers
+  swords
+  bows
+  armors
+  helmets
+  shields
+  wands
+  scrolls
+  potions
+}
+
+enum Type @aws_api_key @aws_iam {
+  # AxeType
+  singleSided
+  doubleSided
+  # ArmorType
+  leather
+  chainmail
+  plate
+  # PotionType
+  green
+  blue
+  red
+}
+
+enum Quality @aws_api_key @aws_iam {
+  normal
+  improved
+  excellent
+}
+
+enum EffectPower @aws_api_key @aws_iam {
+  none
+  weak
+  average
+  strong
+}
